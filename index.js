@@ -1,156 +1,67 @@
-// ══════════════════════════════════════════════════════
-// בשן רדיאטורים — Israel Vehicle Proxy Server
-// מחבר בין האתר לבין data.gov.il של משרד התחבורה
-// ══════════════════════════════════════════════════════
-
+// בשן רדיאטורים — Israel Vehicle Proxy Server v2
 const express = require('express');
 const cors    = require('cors');
 const fetch   = require('node-fetch');
-
-const app  = express();
-const PORT = process.env.PORT || 3000;
-
-// Allow requests from any website (including bashan)
+const app     = express();
+const PORT    = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// ── Health check ──────────────────────────────────────
-app.get('/', (req, res) => {
-  res.json({
-    status: 'running',
-    service: 'Bashan Radiators — Israel Vehicle API',
-    version: '1.0.0'
-  });
-});
+app.get('/', (req, res) => res.json({status:'running',service:'Bashan Vehicle API v2',version:'2.0.0'}));
 
-// ── Main endpoint: GET /vehicle/:plate ────────────────
-// Example: /vehicle/1234567
 app.get('/vehicle/:plate', async (req, res) => {
-  const plate = req.params.plate.replace(/[^0-9]/g, '');
-
-  // Validate plate number
-  if (!plate || plate.length < 5 || plate.length > 8) {
-    return res.status(400).json({
-      success: false,
-      error: 'מספר לוחית לא תקין. נדרשות 7-8 ספרות.'
-    });
-  }
+  const plate = req.params.plate.replace(/[^0-9]/g,'');
+  if(!plate||plate.length<5||plate.length>8)
+    return res.status(400).json({success:false,error:'מספר לוחית לא תקין'});
 
   try {
-    // Call data.gov.il — Ministry of Transport official API
-    const url = `https://data.gov.il/api/3/action/datastore_search` +
-                `?resource_id=053cea08-09bc-40ec-8f7a-156f0677aff3` +
-                `&q=${plate}` +
-                `&limit=1`;
+    // Method 1: exact filter by mispar_rechev
+    let records = await searchGov(`filters={"mispar_rechev":"${plate}"}&limit=1`);
 
-    const govResponse = await fetch(url, {
-      headers: {
-        'User-Agent': 'BashanRadiators-VehicleSearch/1.0'
-      },
-      timeout: 8000
-    });
-
-    if (!govResponse.ok) {
-      throw new Error(`Government API error: ${govResponse.status}`);
+    // Method 2: fallback with q= and filter manually
+    if(!records||records.length===0){
+      const all = await searchGov(`q=${plate}&limit=5`);
+      records = (all||[]).filter(r=>String(r['mispar_rechev']||'').replace(/\D/g,'')=== plate);
+      if(!records.length) records = all||[];
     }
 
-    const govData = await govResponse.json();
+    if(!records||records.length===0)
+      return res.status(404).json({success:false,error:`לא נמצא רכב עם לוחית ${plate}`});
 
-    if (!govData.success || !govData.result || !govData.result.records || govData.result.records.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: `לא נמצא רכב עם לוחית ${plate}`
-      });
-    }
-
-    const record = govData.result.records[0];
-
-    // Clean and format the response
-    const vehicle = {
+    const r = records[0];
+    return res.json({
       success: true,
-      plate: plate,
+      plate,
       source: 'data.gov.il — משרד התחבורה',
       data: {
-        make:        cleanField(record['tozeret_nm']        || record['tozeret_cd']),
-        model:       cleanField(record['kinuy_mishari']     || record['degem_nm']),
-        model_code:  cleanField(record['degem_cd']),
-        year:        cleanField(record['shnat_yitzur']),
-        color:       cleanField(record['tzeva_rechev']),
-        fuel:        cleanField(record['sug_delek_nm']),
-        engine_cc:   cleanField(record['nefach_manoa']),
-        doors:       cleanField(record['mispar_dlatot']),
-        total_weight:cleanField(record['mishkal_kolel']),
-        ownership:   cleanField(record['baalut']),
-        vin:         cleanField(record['misgeret']),
-        last_test:   formatDate(record['mivchan_acharon_dt']),
-        license_exp: formatDate(record['tokef_dt']),
-        first_road:  formatDate(record['moed_aliya_lakvish']),
-        fee_group:   cleanField(record['kvuzat_agra_nm']),
+        make:        c(r['tozeret_nm'])     || c(r['tozeret_cd']),
+        model:       c(r['kinuy_mishari'])  || c(r['degem_nm']),
+        model_code:  c(r['degem_cd']),
+        year:        c(r['shnat_yitzur']),
+        color:       c(r['tzeva_rechev']),
+        fuel:        c(r['sug_delek_nm']),
+        engine_cc:   c(r['nefach_manoa']),
+        doors:       c(r['mispar_dlatot']),
+        vin:         c(r['misgeret']),
+        last_test:   d(r['mivchan_acharon_dt']),
+        license_exp: d(r['tokef_dt']),
+        first_road:  d(r['moed_aliya_lakvish']),
       }
-    };
-
-    return res.json(vehicle);
-
-  } catch (error) {
-    console.error('Error fetching vehicle data:', error.message);
-    return res.status(500).json({
-      success: false,
-      error: 'שגיאה בשליפת הנתונים. נסה שנית.',
-      detail: error.message
     });
+  } catch(e) {
+    console.error(e.message);
+    return res.status(500).json({success:false,error:'שגיאה: '+e.message});
   }
 });
 
-// ── POST endpoint for multiple plates ────────────────
-// Body: { plates: ["1234567", "9876543"] }
-app.post('/vehicles', async (req, res) => {
-  const { plates } = req.body;
-  if (!plates || !Array.isArray(plates) || plates.length === 0) {
-    return res.status(400).json({ success: false, error: 'נדרש מערך של לוחיות' });
-  }
-  if (plates.length > 10) {
-    return res.status(400).json({ success: false, error: 'מקסימום 10 לוחיות בקריאה אחת' });
-  }
-
-  const results = await Promise.allSettled(
-    plates.map(p => fetchSingleVehicle(p.replace(/[^0-9]/g, '')))
-  );
-
-  return res.json({
-    success: true,
-    results: results.map((r, i) => ({
-      plate: plates[i],
-      ...(r.status === 'fulfilled' ? r.value : { success: false, error: r.reason?.message })
-    }))
-  });
-});
-
-// ── Helper functions ──────────────────────────────────
-function cleanField(val) {
-  if (val === null || val === undefined) return null;
-  const str = String(val).trim();
-  return (str === '' || str === '0' || str === 'null') ? null : str;
-}
-
-function formatDate(val) {
-  if (!val) return null;
-  return String(val).replace('T00:00:00', '').trim();
-}
-
-async function fetchSingleVehicle(plate) {
-  const url = `https://data.gov.il/api/3/action/datastore_search` +
-              `?resource_id=053cea08-09bc-40ec-8f7a-156f0677aff3` +
-              `&q=${plate}&limit=1`;
-  const res  = await fetch(url, { timeout: 8000 });
+async function searchGov(params) {
+  const url = `https://data.gov.il/api/3/action/datastore_search?resource_id=053cea08-09bc-40ec-8f7a-156f0677aff3&${params}`;
+  const res = await fetch(url,{headers:{'User-Agent':'Mozilla/5.0 BashanRadiators/2.0','Accept':'application/json'},timeout:10000});
   const data = await res.json();
-  if (!data.success || !data.result?.records?.length) {
-    throw new Error(`לא נמצא רכב ${plate}`);
-  }
-  return { success: true, plate, data: data.result.records[0] };
+  return data?.result?.records || [];
 }
 
-// ── Start server ──────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`✅ Bashan Vehicle Server running on port ${PORT}`);
-  console.log(`🔗 Test: http://localhost:${PORT}/vehicle/1234567`);
-});
+function c(v){if(v==null)return null;const s=String(v).trim();return(s===''||s==='0'||s==='null')?null:s;}
+function d(v){if(!v)return null;return String(v).replace('T00:00:00','').split('T')[0].trim();}
+
+app.listen(PORT,()=>console.log(`✅ Bashan Vehicle Server v2 on port ${PORT}`));

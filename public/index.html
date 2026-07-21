@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>בשן רדיאטורים וחלפים — חנות B2B לסוחרים</title>
+  <meta name="description" content="בשן רדיאטורים וחלפים — רדיאטורים, טורבו, מדחסים, מאווררים, מעבים, מאיידים, אלטרנטורים, סטרטרים ובלוני גז לכל סוגי הרכבים. מכירה לסוחרים בלבד (B2B).">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- פס עליון -->
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <span>📞 04-000-0000 &nbsp;|&nbsp; ✉️ office@bashan.co.il</span>
+      <span>א'-ה' 08:00-17:00 · ו' 08:00-13:00 &nbsp;|&nbsp; מכירה לסוחרים בלבד B2B</span>
+    </div>
+  </div>
+
+  <!-- כותרת -->
+  <header class="header">
+    <div class="container header-inner">
+      <a class="logo" href="#top">
+        <span class="logo-icon">🌡️</span>
+        <span class="logo-text">
+          <strong>בשן רדיאטורים וחלפים</strong>
+          <small>חלקי קירור וחשמל לכל סוגי הרכבים</small>
+        </span>
+      </a>
+      <nav class="nav">
+        <a href="#top">דף הבית</a>
+        <a href="#categories">קטגוריות</a>
+        <a href="#catalog">קטלוג</a>
+        <a href="#about">אודות</a>
+        <a href="#contact">צור קשר</a>
+      </nav>
+      <div class="header-actions">
+        <button id="btn-orders" class="btn btn-ghost hidden">ההזמנות שלי</button>
+        <button id="btn-auth" class="btn btn-outline">כניסת סוחרים</button>
+        <button id="btn-cart" class="btn btn-primary">🛒 סל <span id="cart-count" class="cart-badge">0</span></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- באנר סטטוס חשבון -->
+  <div id="account-banner" class="account-banner hidden"></div>
+
+  <!-- Hero -->
+  <section class="hero" id="top">
+    <div class="container hero-inner">
+      <div class="hero-text">
+        <h1>כל חלקי הקירור והחשמל לרכב — במקום אחד</h1>
+        <p>רדיאטורים · טורבו · מדחסים · מאווררים · מעבים · מאיידים · אלטרנטורים · סטרטרים · רדיאטורי חימום · שסתומים · בלוני גז</p>
+        <p class="hero-b2b">🔒 אתר סיטונאי לסוחרים, מוסכים וחנויות חלפים בלבד. מחירים והזמנות — לאחר אישור חשבון.</p>
+        <div class="hero-cta">
+          <a href="#catalog" class="btn btn-primary btn-lg">לקטלוג המלא</a>
+          <button class="btn btn-outline btn-lg" onclick="openAuth('register')">פתיחת חשבון סוחר</button>
+        </div>
+      </div>
+      <div class="plate-box">
+        <h3>🚗 חיפוש חלקים לפי מספר רכב</h3>
+        <p>הזינו מספר לוחית ונאתר את הרכב ממאגר משרד התחבורה</p>
+        <form id="plate-form">
+          <input id="plate-input" type="text" inputmode="numeric" placeholder="לדוגמה: 12345678" maxlength="8">
+          <button class="btn btn-primary" type="submit">איתור רכב</button>
+        </form>
+        <div id="plate-result"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- קטגוריות -->
+  <section class="section" id="categories">
+    <div class="container">
+      <h2 class="section-title">קטגוריות מוצרים</h2>
+      <p class="section-sub">לכל מוצר מק"ט ייחודי לפי הקטגוריה שלו — RAD לרדיאטורים, TRB לטורבו, CMP למדחסים ועוד</p>
+      <div id="category-grid" class="category-grid"></div>
+    </div>
+  </section>
+
+  <!-- קטלוג -->
+  <section class="section section-alt" id="catalog">
+    <div class="container">
+      <h2 class="section-title">קטלוג מוצרים</h2>
+      <div class="filters">
+        <input id="f-search" type="search" placeholder='חיפוש חופשי / מק"ט / OEM…'>
+        <select id="f-category"><option value="">כל הקטגוריות</option></select>
+        <select id="f-make"><option value="">כל היצרנים</option></select>
+        <select id="f-model" disabled><option value="">כל הדגמים</option></select>
+        <button id="f-clear" class="btn btn-ghost">ניקוי</button>
+      </div>
+      <div id="price-notice" class="price-notice">
+        💼 המחירים מוצגים לסוחרים מאושרים בלבד. <a href="#" onclick="openAuth('login');return false;">התחברות</a> או <a href="#" onclick="openAuth('register');return false;">הרשמה</a>
+      </div>
+      <div id="product-grid" class="product-grid"></div>
+      <div id="pagination" class="pagination"></div>
+    </div>
+  </section>
+
+  <!-- אודות -->
+  <section class="section" id="about">
+    <div class="container about-grid">
+      <div>
+        <h2 class="section-title" style="text-align:right">אודות בשן רדיאטורים וחלפים</h2>
+        <p>בשן רדיאטורים וחלפים מתמחה זה שנים רבות באספקת חלקי קירור, מיזוג וחשמל לרכב — לרכב פרטי, מסחרי, משאיות וציוד כבד.</p>
+        <p>אנו עובדים מול מוסכים, חנויות חלפים, ציי רכב ויבואנים בפריסה ארצית, ומחזיקים מלאי רחב של רדיאטורים, מגדשי טורבו, מדחסי מזגן, מאווררים, מעבים, מאיידים, אלטרנטורים, סטרטרים, רדיאטורי חימום, שסתומים ובלוני גז קירור.</p>
+        <ul class="about-list">
+          <li>✅ מלאי ענק לכל סוגי הרכבים — פרטי, מסחרי ומשאיות</li>
+          <li>✅ מק"ט מסודר לכל פריט לפי קטגוריה</li>
+          <li>✅ מחירי סיטונאות לסוחרים מאושרים</li>
+          <li>✅ משלוחים מהירים לכל הארץ</li>
+          <li>✅ אחריות מלאה על כל המוצרים</li>
+        </ul>
+      </div>
+      <div class="stats">
+        <div class="stat"><strong id="stat-products">—</strong><span>מק"טים בקטלוג</span></div>
+        <div class="stat"><strong id="stat-makes">—</strong><span>יצרני רכב</span></div>
+        <div class="stat"><strong>11</strong><span>קטגוריות מוצרים</span></div>
+        <div class="stat"><strong>24h</strong><span>אספקה מהירה</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- צור קשר -->
+  <section class="section section-alt" id="contact">
+    <div class="container">
+      <h2 class="section-title">צור קשר</h2>
+      <div class="contact-grid">
+        <div class="contact-card"><span>📞</span><strong>טלפון</strong><p>04-000-0000</p></div>
+        <div class="contact-card"><span>✉️</span><strong>אימייל</strong><p>office@bashan.co.il</p></div>
+        <div class="contact-card"><span>📍</span><strong>כתובת</strong><p>אזור התעשייה, ישראל</p></div>
+        <div class="contact-card"><span>🕗</span><strong>שעות פעילות</strong><p>א'-ה' 08:00-17:00<br>ו' 08:00-13:00</p></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <p><strong>בשן רדיאטורים וחלפים</strong> — אתר סיטונאי B2B לסוחרים בלבד</p>
+      <p class="footer-small">רדיאטורים · טורבו · מדחסים · מאווררים · מעבים · מאיידים · אלטרנטורים · סטרטרים · רדיאטורי חימום · שסתומים · בלוני גז</p>
+    </div>
+  </footer>
+
+  <!-- מודאל התחברות/הרשמה -->
+  <div id="auth-modal" class="modal hidden">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal('auth-modal')">✕</button>
+      <div class="tabs">
+        <button id="tab-login" class="tab active" onclick="switchTab('login')">התחברות</button>
+        <button id="tab-register" class="tab" onclick="switchTab('register')">הרשמת סוחר</button>
+      </div>
+
+      <form id="login-form" class="auth-form">
+        <label>אימייל<input name="email" type="email" required></label>
+        <label>סיסמה<input name="password" type="password" required></label>
+        <button class="btn btn-primary btn-block" type="submit">התחברות</button>
+      </form>
+
+      <form id="register-form" class="auth-form hidden">
+        <p class="form-note">ההרשמה מיועדת לעסקים בלבד. החשבון ייבדק ויאושר ע"י צוות בשן.</p>
+        <label>שם החברה / העסק<input name="company" required></label>
+        <label>ח.פ / עוסק מורשה<input name="hp" required></label>
+        <label>שם איש קשר<input name="name" required></label>
+        <label>טלפון<input name="phone" type="tel" required></label>
+        <label>אימייל<input name="email" type="email" required></label>
+        <label>סיסמה (6 תווים לפחות)<input name="password" type="password" minlength="6" required></label>
+        <button class="btn btn-primary btn-block" type="submit">שליחת בקשה לפתיחת חשבון</button>
+      </form>
+      <div id="auth-error" class="form-error"></div>
+    </div>
+  </div>
+
+  <!-- מגירת סל -->
+  <div id="cart-drawer" class="drawer hidden">
+    <div class="drawer-box">
+      <button class="modal-close" onclick="closeCart()">✕</button>
+      <h3>🛒 סל הזמנה</h3>
+      <div id="cart-items"></div>
+      <div id="cart-summary"></div>
+      <textarea id="cart-notes" placeholder="הערות להזמנה (אופציונלי)…"></textarea>
+      <button id="btn-checkout" class="btn btn-primary btn-block">שליחת הזמנה</button>
+      <p class="form-note">ההזמנה תישלח כהזמנת רכש לצוות בשן. חיוב לפי תנאי הסחר שלך.</p>
+    </div>
+  </div>
+
+  <!-- מודאל הזמנות -->
+  <div id="orders-modal" class="modal hidden">
+    <div class="modal-box modal-wide">
+      <button class="modal-close" onclick="closeModal('orders-modal')">✕</button>
+      <h3>📋 ההזמנות שלי</h3>
+      <div id="orders-list"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,207 @@
+/* בשן רדיאטורים וחלפים — עיצוב */
+:root {
+  --navy: #0d2137;
+  --navy-2: #143352;
+  --accent: #e8590c;
+  --accent-2: #ff7a2e;
+  --bg: #f5f7fa;
+  --card: #ffffff;
+  --text: #1d2b3a;
+  --muted: #6b7a8c;
+  --line: #e1e7ee;
+  --ok: #2b8a3e;
+  --warn: #b08900;
+  --err: #c92a2a;
+  --radius: 12px;
+  --shadow: 0 2px 12px rgba(13, 33, 55, 0.08);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Segoe UI', 'Heebo', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+a { color: var(--accent); text-decoration: none; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+.hidden { display: none !important; }
+
+/* פס עליון */
+.topbar { background: var(--navy); color: #cfdcea; font-size: 0.85rem; padding: 6px 0; }
+.topbar-inner { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+
+/* כותרת */
+.header { background: #fff; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 50; box-shadow: var(--shadow); }
+.header-inner { display: flex; align-items: center; gap: 24px; padding: 12px 20px; flex-wrap: wrap; }
+.logo { display: flex; align-items: center; gap: 10px; color: var(--text); }
+.logo-icon { font-size: 2rem; }
+.logo-text { display: flex; flex-direction: column; line-height: 1.2; }
+.logo-text strong { font-size: 1.15rem; color: var(--navy); }
+.logo-text small { color: var(--muted); font-size: 0.75rem; }
+.nav { display: flex; gap: 18px; margin-inline-start: auto; }
+.nav a { color: var(--text); font-weight: 500; font-size: 0.95rem; }
+.nav a:hover { color: var(--accent); }
+.header-actions { display: flex; gap: 8px; align-items: center; }
+
+/* כפתורים */
+.btn { border: none; border-radius: 8px; padding: 9px 16px; font-size: 0.95rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: 0.15s; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-2); }
+.btn-outline { background: #fff; color: var(--navy); border: 1.5px solid var(--navy); }
+.btn-outline:hover { background: var(--navy); color: #fff; }
+.btn-ghost { background: transparent; color: var(--navy); }
+.btn-ghost:hover { background: var(--line); }
+.btn-lg { padding: 13px 26px; font-size: 1.05rem; }
+.btn-block { width: 100%; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.cart-badge { background: #fff; color: var(--accent); border-radius: 20px; padding: 0 7px; font-size: 0.8rem; margin-inline-start: 4px; }
+
+/* באנר חשבון */
+.account-banner { text-align: center; padding: 10px; font-weight: 600; }
+.account-banner.pending { background: #fff3cd; color: #7a5c00; }
+.account-banner.approved { background: #d3f9d8; color: var(--ok); }
+.account-banner.rejected { background: #ffe3e3; color: var(--err); }
+
+/* Hero */
+.hero { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 60%, #1d4e78 100%); color: #fff; padding: 60px 0; }
+.hero-inner { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 40px; align-items: center; }
+.hero-text h1 { font-size: 2.3rem; line-height: 1.25; margin-bottom: 14px; }
+.hero-text p { color: #c8d6e5; margin-bottom: 10px; }
+.hero-b2b { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; padding: 10px 14px; font-size: 0.92rem; }
+.hero-cta { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+.hero-cta .btn-outline { border-color: #fff; color: #fff; background: transparent; }
+.hero-cta .btn-outline:hover { background: #fff; color: var(--navy); }
+
+/* חיפוש לוחית */
+.plate-box { background: #fff; color: var(--text); border-radius: var(--radius); padding: 22px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25); }
+.plate-box h3 { color: var(--navy); margin-bottom: 4px; }
+.plate-box p { color: var(--muted); font-size: 0.88rem; margin-bottom: 12px; }
+.plate-box form { display: flex; gap: 8px; }
+.plate-box input { flex: 1; border: 2px solid #f0c419; background: #fdf1c7; border-radius: 8px; padding: 10px 12px; font-size: 1.1rem; font-weight: 700; letter-spacing: 2px; text-align: center; direction: ltr; }
+#plate-result { margin-top: 12px; font-size: 0.9rem; }
+.plate-card { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+.plate-card .row { display: flex; justify-content: space-between; padding: 2px 0; }
+.plate-card .row span:first-child { color: var(--muted); }
+
+/* מקטעים */
+.section { padding: 60px 0; }
+.section-alt { background: #fff; }
+.section-title { text-align: center; font-size: 1.9rem; color: var(--navy); margin-bottom: 8px; }
+.section-sub { text-align: center; color: var(--muted); margin-bottom: 30px; }
+
+/* קטגוריות */
+.category-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-top: 24px; }
+.category-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 14px; text-align: center; cursor: pointer; transition: 0.15s; box-shadow: var(--shadow); }
+.category-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+.category-card .cat-icon { font-size: 2.2rem; display: block; margin-bottom: 8px; }
+.category-card strong { display: block; color: var(--navy); font-size: 0.98rem; }
+.category-card small { color: var(--muted); font-size: 0.78rem; }
+
+/* פילטרים */
+.filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.filters input, .filters select { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 0.95rem; font-family: inherit; background: #fff; }
+.filters input[type='search'] { flex: 2; min-width: 220px; }
+.filters select { flex: 1; min-width: 150px; }
+
+.price-notice { background: #eef4fb; border: 1px solid #c9dcf0; color: var(--navy); border-radius: 8px; padding: 10px 14px; margin-bottom: 18px; font-size: 0.92rem; }
+
+/* מוצרים */
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.product-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 8px; box-shadow: var(--shadow); }
+.product-card .p-cat { font-size: 0.78rem; color: var(--accent); font-weight: 700; }
+.product-card .p-name { font-weight: 600; color: var(--navy); font-size: 0.98rem; min-height: 48px; }
+.product-card .p-sku { font-family: monospace; background: var(--bg); border: 1px dashed var(--line); border-radius: 6px; padding: 3px 8px; font-size: 0.88rem; direction: ltr; text-align: center; }
+.product-card .p-meta { font-size: 0.8rem; color: var(--muted); }
+.product-card .p-stock { font-size: 0.8rem; font-weight: 600; }
+.p-stock.in { color: var(--ok); }
+.p-stock.out { color: var(--warn); }
+.product-card .p-price { font-size: 1.25rem; font-weight: 800; color: var(--navy); }
+.product-card .p-price small { font-size: 0.75rem; color: var(--muted); font-weight: 400; }
+.p-price-locked { color: var(--muted); font-size: 0.85rem; }
+.p-buy { display: flex; gap: 8px; margin-top: auto; }
+.p-buy input { width: 64px; border: 1px solid var(--line); border-radius: 8px; padding: 8px; text-align: center; font-family: inherit; }
+.p-buy .btn { flex: 1; }
+.empty-msg { text-align: center; color: var(--muted); padding: 40px 0; grid-column: 1/-1; }
+
+/* דפדוף */
+.pagination { display: flex; justify-content: center; gap: 6px; margin-top: 24px; flex-wrap: wrap; }
+.pagination button { border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 8px 14px; cursor: pointer; font-family: inherit; }
+.pagination button.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+/* אודות */
+.about-grid { display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 40px; align-items: center; }
+.about-grid p { margin-bottom: 12px; color: #33475b; }
+.about-list { list-style: none; margin-top: 10px; }
+.about-list li { padding: 4px 0; }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.stat { background: var(--navy); color: #fff; border-radius: var(--radius); padding: 22px 10px; text-align: center; }
+.stat strong { display: block; font-size: 1.8rem; color: var(--accent-2); }
+.stat span { font-size: 0.85rem; color: #c8d6e5; }
+
+/* צור קשר */
+.contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px; }
+.contact-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; text-align: center; box-shadow: var(--shadow); }
+.contact-card span { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+.contact-card strong { color: var(--navy); }
+.contact-card p { color: var(--muted); font-size: 0.9rem; }
+
+/* פוטר */
+.footer { background: var(--navy); color: #c8d6e5; text-align: center; padding: 28px 0; }
+.footer-small { font-size: 0.8rem; margin-top: 6px; color: #7f95aa; }
+
+/* מודאלים */
+.modal { position: fixed; inset: 0; background: rgba(13, 33, 55, 0.55); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
+.modal-box { background: #fff; border-radius: var(--radius); padding: 26px; width: 100%; max-width: 420px; position: relative; max-height: 90vh; overflow-y: auto; }
+.modal-wide { max-width: 720px; }
+.modal-close { position: absolute; top: 12px; inset-inline-start: 12px; border: none; background: var(--bg); border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 0.9rem; }
+.tabs { display: flex; gap: 6px; margin-bottom: 18px; }
+.tab { flex: 1; border: none; background: var(--bg); padding: 10px; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 600; color: var(--muted); }
+.tab.active { background: var(--navy); color: #fff; }
+.auth-form { display: flex; flex-direction: column; gap: 12px; }
+.auth-form label { display: flex; flex-direction: column; gap: 4px; font-size: 0.88rem; font-weight: 600; color: var(--navy); }
+.auth-form input { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 0.95rem; font-family: inherit; }
+.form-note { font-size: 0.82rem; color: var(--muted); }
+.form-error { color: var(--err); font-size: 0.88rem; margin-top: 10px; text-align: center; min-height: 1.2em; }
+
+/* מגירת סל */
+.drawer { position: fixed; inset: 0; background: rgba(13, 33, 55, 0.55); z-index: 100; }
+.drawer-box { position: absolute; top: 0; bottom: 0; inset-inline-start: 0; width: 100%; max-width: 420px; background: #fff; padding: 26px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+.cart-line { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--line); padding: 10px 0; }
+.cart-line .cl-info { flex: 1; }
+.cart-line .cl-name { font-size: 0.88rem; font-weight: 600; color: var(--navy); }
+.cart-line .cl-sku { font-family: monospace; font-size: 0.78rem; color: var(--muted); direction: ltr; display: inline-block; }
+.cart-line .cl-qty { display: flex; align-items: center; gap: 6px; }
+.cart-line .cl-qty button { width: 26px; height: 26px; border: 1px solid var(--line); background: #fff; border-radius: 6px; cursor: pointer; }
+.cart-line .cl-price { font-weight: 700; white-space: nowrap; }
+.cart-line .cl-remove { border: none; background: none; color: var(--err); cursor: pointer; font-size: 1.1rem; }
+#cart-summary { font-size: 0.95rem; }
+#cart-summary .sum-row { display: flex; justify-content: space-between; padding: 3px 0; }
+#cart-summary .sum-total { font-weight: 800; font-size: 1.15rem; border-top: 2px solid var(--navy); margin-top: 6px; padding-top: 8px; }
+#cart-notes { border: 1px solid var(--line); border-radius: 8px; padding: 10px; font-family: inherit; min-height: 70px; resize: vertical; }
+
+/* הזמנות */
+.order-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; }
+.order-head { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.order-num { font-weight: 800; color: var(--navy); }
+.order-status { font-size: 0.8rem; font-weight: 700; border-radius: 20px; padding: 2px 12px; }
+.st-new { background: #eef4fb; color: var(--navy); }
+.st-processing { background: #fff3cd; color: #7a5c00; }
+.st-shipped { background: #e0f2fe; color: #075985; }
+.st-done { background: #d3f9d8; color: var(--ok); }
+.st-cancelled { background: #ffe3e3; color: var(--err); }
+.order-items { font-size: 0.85rem; color: var(--muted); }
+.order-items div { display: flex; justify-content: space-between; }
+
+/* טוסט */
+.toast { position: fixed; bottom: 24px; inset-inline-start: 50%; transform: translateX(50%); background: var(--navy); color: #fff; padding: 12px 22px; border-radius: 10px; z-index: 200; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3); }
+.toast.error { background: var(--err); }
+
+/* רספונסיבי */
+@media (max-width: 860px) {
+  .hero-inner, .about-grid { grid-template-columns: 1fr; }
+  .nav { display: none; }
+  .hero-text h1 { font-size: 1.7rem; }
+  .header-inner { justify-content: space-between; }
+}

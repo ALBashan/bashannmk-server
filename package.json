@@ -1,7 +1,7 @@
 {
-  "name": "bashan-vehicle-server",
-  "version": "1.0.0",
-  "description": "Bashan Radiators — Israel Vehicle Data Proxy Server",
+  "name": "bashan-b2b-store",
+  "version": "3.0.0",
+  "description": "בשן רדיאטורים וחלפים — חנות B2B לסוחרים + שרת נתוני רכב",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

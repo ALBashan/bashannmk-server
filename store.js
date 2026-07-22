@@ -5,7 +5,7 @@ const path = require('path');
 const DATA_DIR = path.join(__dirname, 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
 
-const EMPTY = { users: [], orders: [], seq: { user: 0, order: 0 } };
+const EMPTY = { users: [], orders: [], sessions: [], logins: [], seq: { user: 0, order: 0 } };
 
 function load() {
   try {

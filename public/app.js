@@ -7,6 +7,13 @@ let CART = JSON.parse(localStorage.getItem('bashan_cart') || '[]');
 let FILTERS = { q: '', category: '', make: '', model: '', page: 1 };
 let PRICES_VISIBLE = false;
 
+// מזהה מכשיר קבוע — משמש את השרת לזיהוי התחברות ממכשיר חדש (הגנה משיתוף חשבון)
+let DEVICE_ID = localStorage.getItem('bashan_device');
+if (!DEVICE_ID) {
+  DEVICE_ID = 'dev-' + Math.random().toString(36).slice(2) + '-' + Date.now().toString(36);
+  localStorage.setItem('bashan_device', DEVICE_ID);
+}
+
 const $ = (id) => document.getElementById(id);
 
 function headers() {
@@ -18,8 +25,24 @@ function headers() {
 async function api(path, opts = {}) {
   const res = await fetch(API + path, { headers: headers(), ...opts });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || 'שגיאת שרת');
+  if (!res.ok) {
+    if (data.code === 'session_revoked') forceDisconnect(data.error);
+    throw new Error(data.error || 'שגיאת שרת');
+  }
   return data;
+}
+
+// השרת ניתק אותנו כי החשבון חובר ממכשיר אחר
+function forceDisconnect(message) {
+  USER = null; TOKEN = null;
+  localStorage.removeItem('bashan_token');
+  $('btn-auth').textContent = 'כניסת סוחרים';
+  $('btn-orders').classList.add('hidden');
+  const banner = $('account-banner');
+  banner.className = 'account-banner rejected';
+  banner.textContent = '⚠️ ' + message;
+  banner.classList.remove('hidden');
+  loadProducts();
 }
 
 function toast(msg, isError) {
@@ -239,7 +262,7 @@ $('login-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const f = new FormData(e.target);
   try {
-    const res = await api('/api/auth/login', { method: 'POST', body: JSON.stringify(Object.fromEntries(f)) });
+    const res = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ ...Object.fromEntries(f), deviceId: DEVICE_ID }) });
     TOKEN = res.token;
     localStorage.setItem('bashan_token', TOKEN);
     setUser(res.user);
@@ -255,7 +278,7 @@ $('register-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const f = new FormData(e.target);
   try {
-    const res = await api('/api/auth/register', { method: 'POST', body: JSON.stringify(Object.fromEntries(f)) });
+    const res = await api('/api/auth/register', { method: 'POST', body: JSON.stringify({ ...Object.fromEntries(f), deviceId: DEVICE_ID }) });
     TOKEN = res.token;
     localStorage.setItem('bashan_token', TOKEN);
     setUser(res.user);
@@ -292,6 +315,7 @@ function setUser(user) {
 }
 
 function logout() {
+  if (TOKEN) fetch(API + '/api/auth/logout', { method: 'POST', headers: headers() }).catch(() => {});
   USER = null; TOKEN = null;
   localStorage.removeItem('bashan_token');
   $('btn-auth').textContent = 'כניסת סוחרים';

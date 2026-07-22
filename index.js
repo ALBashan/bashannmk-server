@@ -13,6 +13,7 @@ const PORT = process.env.PORT || 3000;
 const SECRET = process.env.TOKEN_SECRET || (db.secret || (db.secret = crypto.randomBytes(32).toString('hex'), save(), db.secret));
 const VAT_RATE = 0.18;
 
+app.set('trust proxy', true);
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -50,16 +51,70 @@ function verifyToken(token) {
   }
 }
 
+// ---------- ניהול מכשירים וחיבורים (הגנה משיתוף חשבון) ----------
+// כל התחברות נרשמת (מכשיר, IP, זמן). לסוחר מותרת רק ישיבה פעילה אחת —
+// התחברות ממכשיר חדש מנתקת מיידית את הקודם, כך ששיתוף חשבון עם גורם
+// זר מתגלה מיד וגם הופך לבלתי-שמיש בפועל.
+const SINGLE_SESSION = process.env.SINGLE_SESSION !== '0';
+
+function clientIp(req) {
+  return (req.ip || req.socket.remoteAddress || '').replace(/^::ffff:/, '');
+}
+
+function createSession(user, req, deviceId) {
+  const session = {
+    id: crypto.randomBytes(16).toString('hex'),
+    userId: user.id,
+    deviceId: String(deviceId || 'unknown').slice(0, 64),
+    ip: clientIp(req),
+    ua: String(req.headers['user-agent'] || '').slice(0, 200),
+    createdAt: new Date().toISOString(),
+    lastSeen: new Date().toISOString(),
+    active: true,
+  };
+  // סוחר = ישיבה אחת בלבד; מנהל פטור כדי לא לנעול את עצמו
+  if (SINGLE_SESSION && user.role !== 'admin') {
+    db.sessions.forEach((s) => {
+      if (s.userId === user.id && s.active) { s.active = false; s.revokedReason = 'new-login'; }
+    });
+  }
+  db.sessions.push(session);
+  db.logins.push({
+    userId: user.id, deviceId: session.deviceId, ip: session.ip,
+    ua: session.ua, at: session.createdAt,
+  });
+  if (db.logins.length > 5000) db.logins.splice(0, db.logins.length - 5000);
+  save();
+  return session;
+}
+
 function authUser(req) {
   const header = req.headers.authorization || '';
   const payload = verifyToken(header.replace(/^Bearer\s+/i, ''));
   if (!payload) return null;
-  return db.users.find((u) => u.id === payload.uid) || null;
+  const user = db.users.find((u) => u.id === payload.uid) || null;
+  if (!user) return null;
+  const session = db.sessions.find((s) => s.id === payload.sid);
+  if (!session || !session.active) {
+    req.sessionRevoked = !!(session && session.revokedReason === 'new-login');
+    return null;
+  }
+  session.lastSeen = new Date().toISOString();
+  req.session = session;
+  return user;
 }
 
 function requireAuth(req, res, next) {
   const user = authUser(req);
-  if (!user) return res.status(401).json({ success: false, error: 'נדרשת התחברות' });
+  if (!user) {
+    if (req.sessionRevoked) {
+      return res.status(401).json({
+        success: false, code: 'session_revoked',
+        error: 'החשבון חובר ממכשיר אחר ולכן נותקת. אם זה לא אתה — החלף סיסמה ופנה למשרד.',
+      });
+    }
+    return res.status(401).json({ success: false, error: 'נדרשת התחברות' });
+  }
   req.user = user;
   next();
 }
@@ -161,8 +216,8 @@ app.post('/api/auth/register', (req, res) => {
     role: 'dealer', status: 'pending', createdAt: new Date().toISOString(),
   };
   db.users.push(user);
-  save();
-  res.json({ success: true, token: signToken({ uid: user.id }), user: publicUser(user), message: 'ההרשמה התקבלה! החשבון ממתין לאישור צוות בשן.' });
+  const session = createSession(user, req, req.body.deviceId);
+  res.json({ success: true, token: signToken({ uid: user.id, sid: session.id }), user: publicUser(user), message: 'ההרשמה התקבלה! החשבון ממתין לאישור צוות בשן.' });
 });
 
 app.post('/api/auth/login', (req, res) => {
@@ -173,11 +228,19 @@ app.post('/api/auth/login', (req, res) => {
   if (!crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(user.hash))) {
     return res.status(401).json({ success: false, error: 'אימייל או סיסמה שגויים' });
   }
-  res.json({ success: true, token: signToken({ uid: user.id }), user: publicUser(user) });
+  const session = createSession(user, req, req.body.deviceId);
+  res.json({ success: true, token: signToken({ uid: user.id, sid: session.id }), user: publicUser(user) });
 });
 
 app.get('/api/auth/me', requireAuth, (req, res) => {
   res.json({ success: true, user: publicUser(req.user) });
+});
+
+app.post('/api/auth/logout', requireAuth, (req, res) => {
+  req.session.active = false;
+  req.session.revokedReason = 'logout';
+  save();
+  res.json({ success: true });
 });
 
 // ---------- הזמנות (סוחרים מאושרים בלבד) ----------
@@ -220,8 +283,66 @@ app.get('/api/orders', requireAuth, (req, res) => {
 
 // ---------- ניהול ----------
 
+// סיכום אבטחה לסוחר: כמה מכשירים/כתובות IP בשימוש + דגל חשד לשיתוף חשבון
+function securitySummary(userId) {
+  const now = Date.now();
+  const DAY = 24 * 3600 * 1000;
+  const logins = db.logins.filter((l) => l.userId === userId);
+  const last30 = logins.filter((l) => now - Date.parse(l.at) < 30 * DAY);
+  const last24 = logins.filter((l) => now - Date.parse(l.at) < DAY);
+  const devices30 = new Set(last30.map((l) => l.deviceId));
+  const ips24 = new Set(last24.map((l) => l.ip));
+  const suspicious = devices30.size >= 3 || ips24.size >= 3;
+  return {
+    totalLogins: logins.length,
+    lastLogin: logins.length ? logins[logins.length - 1].at : null,
+    devices30: devices30.size,
+    ips24: ips24.size,
+    suspicious,
+  };
+}
+
 app.get('/api/admin/users', requireAuth, requireAdmin, (req, res) => {
-  res.json({ success: true, users: db.users.map(publicUser).sort((a, b) => b.id - a.id) });
+  res.json({
+    success: true,
+    users: db.users.map((u) => ({ ...publicUser(u), security: securitySummary(u.id) })).sort((a, b) => b.id - a.id),
+  });
+});
+
+// היסטוריית פעילות מלאה של סוחר — התחברויות ומכשירים
+app.get('/api/admin/users/:id/activity', requireAuth, requireAdmin, (req, res) => {
+  const id = parseInt(req.params.id);
+  const user = db.users.find((u) => u.id === id);
+  if (!user) return res.status(404).json({ success: false, error: 'משתמש לא נמצא' });
+
+  const logins = db.logins.filter((l) => l.userId === id).slice(-50).reverse();
+  const devices = {};
+  for (const l of db.logins.filter((x) => x.userId === id)) {
+    const d = devices[l.deviceId] || (devices[l.deviceId] = { deviceId: l.deviceId, ua: l.ua, ips: new Set(), count: 0, firstSeen: l.at, lastSeen: l.at });
+    d.ips.add(l.ip);
+    d.count++;
+    d.lastSeen = l.at;
+  }
+  res.json({
+    success: true,
+    user: publicUser(user),
+    security: securitySummary(id),
+    logins,
+    devices: Object.values(devices).map((d) => ({ ...d, ips: [...d.ips] })),
+    activeSessions: db.sessions.filter((s) => s.userId === id && s.active)
+      .map(({ id: sid, deviceId, ip, ua, createdAt, lastSeen }) => ({ id: sid, deviceId, ip, ua, createdAt, lastSeen })),
+  });
+});
+
+// ניתוק כפוי של כל המכשירים של סוחר (למשל בחשד לשיתוף חשבון)
+app.post('/api/admin/users/:id/disconnect', requireAuth, requireAdmin, (req, res) => {
+  const id = parseInt(req.params.id);
+  let revoked = 0;
+  db.sessions.forEach((s) => {
+    if (s.userId === id && s.active) { s.active = false; s.revokedReason = 'admin'; revoked++; }
+  });
+  save();
+  res.json({ success: true, revoked });
 });
 
 app.post('/api/admin/users/:id/status', requireAuth, requireAdmin, (req, res) => {

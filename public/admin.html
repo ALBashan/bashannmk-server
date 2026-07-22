@@ -39,7 +39,7 @@
       <h2 style="color:var(--navy)">🧑‍💼 סוחרים</h2>
       <p class="form-note" style="margin-bottom:10px">אישור חשבון פותח לסוחר גישה למחירים ולביצוע הזמנות.</p>
       <table class="admin-table">
-        <thead><tr><th>#</th><th>חברה</th><th>ח.פ</th><th>איש קשר</th><th>טלפון</th><th>אימייל</th><th>סטטוס</th></tr></thead>
+        <thead><tr><th>#</th><th>חברה</th><th>ח.פ</th><th>איש קשר</th><th>טלפון</th><th>אימייל</th><th>סטטוס</th><th>אבטחה</th></tr></thead>
         <tbody id="users-body"></tbody>
       </table>
     </div>
@@ -50,6 +50,15 @@
         <thead><tr><th>מס' הזמנה</th><th>תאריך</th><th>חברה</th><th>פריטים</th><th>סה"כ</th><th>סטטוס</th></tr></thead>
         <tbody id="orders-body"></tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- מודאל פעילות סוחר -->
+  <div id="activity-modal" class="modal hidden">
+    <div class="modal-box modal-wide">
+      <button class="modal-close" onclick="document.getElementById('activity-modal').classList.add('hidden')">✕</button>
+      <h3 id="activity-title">🔎 פעילות חשבון</h3>
+      <div id="activity-body"></div>
     </div>
   </div>
 
@@ -112,7 +121,59 @@
               <option value="rejected" ${u.status === 'rejected' ? 'selected' : ''}>❌ נדחה</option>
             </select>`}
           </td>
-        </tr>`).join('') || '<tr><td colspan="7">אין סוחרים רשומים</td></tr>';
+          <td>${u.role === 'admin' ? '—' : `
+            ${u.security.suspicious ? '<span title="חשד לשיתוף חשבון: מספר מכשירים או כתובות IP">🚨</span> ' : ''}
+            📱 ${u.security.devices30}
+            <button class="btn btn-ghost" style="padding:3px 8px;font-size:0.8rem" onclick="showActivity(${u.id})">פעילות</button>`}
+          </td>
+        </tr>`).join('') || '<tr><td colspan="8">אין סוחרים רשומים</td></tr>';
+    }
+
+    async function showActivity(id) {
+      try {
+        const res = await api(`/api/admin/users/${id}/activity`);
+        const s = res.security;
+        $('activity-title').textContent = `🔎 פעילות חשבון — ${res.user.company}`;
+        $('activity-body').innerHTML = `
+          <p style="margin-bottom:10px">
+            ${s.suspicious ? '<strong style="color:var(--err)">🚨 חשד לשיתוף חשבון!</strong> ' : '<span style="color:var(--ok)">✅ פעילות תקינה.</span> '}
+            סה"כ ${s.totalLogins} התחברויות · ${s.devices30} מכשירים ב-30 יום · ${s.ips24} כתובות IP ב-24 שעות
+          </p>
+          <button class="btn btn-primary" style="margin-bottom:14px" onclick="disconnectUser(${id})">🔌 ניתוק כל המכשירים עכשיו</button>
+
+          <h4 style="color:var(--navy)">מכשירים (${res.devices.length})</h4>
+          <table class="admin-table" style="margin-bottom:16px">
+            <thead><tr><th>מזהה מכשיר</th><th>דפדפן</th><th>כתובות IP</th><th>התחברויות</th><th>נראה לאחרונה</th></tr></thead>
+            <tbody>${res.devices.map((d) => `
+              <tr>
+                <td style="direction:ltr;font-family:monospace;font-size:0.75rem">${d.deviceId.slice(0, 18)}…</td>
+                <td class="order-detail">${d.ua.slice(0, 60)}</td>
+                <td style="direction:ltr">${d.ips.join('<br>')}</td>
+                <td>${d.count}</td>
+                <td>${new Date(d.lastSeen).toLocaleString('he-IL')}</td>
+              </tr>`).join('')}</tbody>
+          </table>
+
+          <h4 style="color:var(--navy)">התחברויות אחרונות</h4>
+          <table class="admin-table">
+            <thead><tr><th>תאריך ושעה</th><th>IP</th><th>מכשיר</th></tr></thead>
+            <tbody>${res.logins.map((l) => `
+              <tr>
+                <td>${new Date(l.at).toLocaleString('he-IL')}</td>
+                <td style="direction:ltr">${l.ip}</td>
+                <td style="direction:ltr;font-family:monospace;font-size:0.75rem">${l.deviceId.slice(0, 18)}…</td>
+              </tr>`).join('') || '<tr><td colspan="3">אין התחברויות</td></tr>'}</tbody>
+          </table>`;
+        $('activity-modal').classList.remove('hidden');
+      } catch (err) { toast(err.message, true); }
+    }
+
+    async function disconnectUser(id) {
+      try {
+        const res = await api(`/api/admin/users/${id}/disconnect`, { method: 'POST' });
+        toast(`נותקו ${res.revoked} מכשירים. הסוחר יידרש להתחבר מחדש.`);
+        $('activity-modal').classList.add('hidden');
+      } catch (err) { toast(err.message, true); }
     }
 
     async function setUserStatus(id, status) {
